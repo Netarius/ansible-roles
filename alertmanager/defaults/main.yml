@@ -1,0 +1,16 @@
+---
+# defaults file for alertmanager
+alertmanager_image: "prom/alertmanager"
+alertmanager_version: "v0.23.0"
+alertmanager_compose_dir: "/opt/prometheus/alertmanager"
+alertmanager_data_dir: "/usr/data/prometheus/alertmanager_data"
+alertmanager_config_dir: "/usr/data/prometheus/alertmanager_config"
+alertmanager_port: 9093
+alertmanager_user: 65534
+alertmanager_telegram_bot_address: ""
+alertmanager_telegram_chat: ""
+alertmanager_default_route: []
+alertmanager_routes: []
+alertmanager_receivers_slack: []
+alertmanager_receivers_telegram: []
+alertmanager_inhibit_rules: []

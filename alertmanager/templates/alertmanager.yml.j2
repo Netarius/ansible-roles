@@ -1,0 +1,75 @@
+global:
+  smtp_smarthost: 'localhost:25'
+  smtp_from: 'alertmanager@example.org'
+
+route:
+{% for route in alertmanager_default_route %}
+  receiver: '{{ route.receiver }}'
+  group_wait: {{ route.group_wait }}
+  group_interval: {{ route.group_interval }}
+  repeat_interval: {{ route.repeat_interval }}
+  group_by: {{ route.group_by }}
+{% endfor %}
+
+{% if alertmanager_routes != [] %}
+  routes:
+{% for route in alertmanager_routes %}
+    - receiver: '{{ route.receiver }}'
+      repeat_interval: {{ route.repeat_interval }}
+      continue: {{ route.continue | lower  }}
+{%  if route.match_re is defined %}
+      match_re:
+{%    for route_match_re in route.match_re %}
+{%      for key,value in route_match_re.items() %}
+        {{ key }}: {{ value }}
+{%      endfor %}
+{%    endfor %}
+{%  endif %}
+{% endfor %} 
+{% endif %}
+
+{% if alertmanager_inhibit_rules != [] %}
+{%  for inhibit_rule in alertmanager_inhibit_rules %}
+inhibit_rules:
+  - source_match:
+      severity: '{{ inhibit_rule.source_match }}'
+    target_match:
+      severity: '{{ inhibit_rule.target_match }}'
+    equal: {{ inhibit_rule.equal }}
+{%  endfor %}
+{% endif %}
+
+receivers:
+{% if alertmanager_receivers_slack != [] %}
+{%  for receiver_slack in alertmanager_receivers_slack %}
+- name: '{{ receiver_slack.receiver }}'
+  slack_configs:
+  - send_resolved: {{ receiver_slack.send_resolved | lower  }}
+    title: '{{'{{'}} template "{{ receiver_slack.title }}" . {{'}}'}}'
+    title_link: '{{ receiver_slack.title_link }}'
+    text: '{{'{{'}} template "{{ receiver_slack.text }}" . {{'}}'}}'
+    color: '{{'{{'}} template "{{ receiver_slack.color }}" . {{'}}'}}'
+    api_url: {{ receiver_slack.api_url }}
+    channel: '#{{ receiver_slack.channel }}'
+{%  endfor %}
+{% endif %}
+{% if alertmanager_receivers_telegram != [] %}
+{%  for receiver_telegram in alertmanager_receivers_telegram %}
+- name: '{{ receiver_telegram.receiver }}'
+  webhook_configs:
+  - url: '{{ receiver_telegram.address }}/alert/{{ receiver_telegram.chat_id }}'
+    send_resolved: {{ receiver_telegram.send_resolved | lower  }}
+{%  endfor %}
+{% endif %}
+{% if alertmanager_receivers_opsgenie != [] %}
+{%  for receiver_opsgenie in alertmanager_receivers_opsgenie %}
+- name: '{{ receiver_opsgenie.receiver }}'
+  opsgenie_configs:
+  - api_key: {{ receiver_opsgenie.api_key }}
+    send_resolved: {{ receiver_opsgenie.send_resolved | lower  }}
+    priority: {{ receiver_opsgenie.priority }}
+{%  endfor %}
+{% endif %}
+
+templates:
+  - '/prometheus/notifications.tmpl'

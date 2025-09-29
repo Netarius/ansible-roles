@@ -1,0 +1,46 @@
+---
+# tasks file for alertmanager
+- name: main -->> Create directories for prometheus alertmanager
+  file:
+    path: "{{ alertmanager_compose_dir }}"
+    state: directory
+
+- name: main -->> Create data directory for alertmanager
+  file:
+    path: "{{ alertmanager_data_dir }}"
+    state: directory
+    owner: "{{ alertmanager_user }}"
+    group: "{{ alertmanager_user }}"
+    mode: '0755'
+
+- name: main -->> Create config directory for alertmanager
+  file:
+    path: "{{ alertmanager_config_dir }}"
+    state: directory
+    owner: "{{ alertmanager_user }}"
+    group: "{{ alertmanager_user }}"
+    mode: '0755'
+
+- name: main -->> Copy alertmanager config file
+  template:
+    src: alertmanager.yml.j2
+    dest: /usr/data/prometheus/alertmanager_config/alertmanager.yml
+    mode: '0644'
+
+- name: main -->> Copy alertmanager notifications config file
+  copy:
+    src: notifications.tmpl
+    dest: /usr/data/prometheus/alertmanager_config/notifications.tmpl
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: main -->> Copy compose file for alertmanager
+  template:
+    src: docker-compose.yml.j2
+    dest: "{{ alertmanager_compose_dir }}/docker-compose.yml"
+
+- name: main -->> Docker compose alertmanager up
+  shell: docker-compose up --force-recreate -d
+  args:
+    chdir: "{{ alertmanager_compose_dir }}"

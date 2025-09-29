@@ -1,0 +1,25 @@
+version: '3.4'
+
+services:
+  alertmanager:
+    image: {{ alertmanager_image }}:{{ alertmanager_version }}
+    container_name: prometheus-alertmanager
+    restart: unless-stopped
+    volumes:
+      - {{ alertmanager_config_dir }}:/prometheus/
+      - {{ alertmanager_data_dir }}:/data/
+    command:
+      - '--config.file=/prometheus/alertmanager.yml'
+      - '--cluster.listen-address='
+      - '--storage.path=/data'
+    ports:
+      - {{ alertmanager_port }}:9093
+    networks:
+    - prometheus
+    logging:
+        driver: "json-file"
+        options:
+          max-size: "50m"
+          
+networks:
+  prometheus:

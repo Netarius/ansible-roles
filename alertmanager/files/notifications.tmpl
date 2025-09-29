@@ -1,0 +1,49 @@
+{{ define "__single_message_title" }}{{ range .Alerts.Firing }}{{ end }}{{ range .Alerts.Resolved }}{{ end }}{{ end }}
+
+{{ define "custom_title" }}[{{ .Status | toUpper }}{{ if eq .Status "firing" }}:{{ .Alerts.Firing | len }}{{ end }}] {{ if or (and (eq (len .Alerts.Firing) 1) (eq (len .Alerts.Resolved) 0)) (and (eq (len .Alerts.Firing) 0) (eq (len .Alerts.Resolved) 1)) }}{{ template "__single_message_title" . }}{{ end }}{{ end }}
+
+{{ define "custom_slack_message" }}
+{{ if or (and (eq (len .Alerts.Firing) 1) (eq (len .Alerts.Resolved) 0)) (and (eq (len .Alerts.Firing) 0) (eq (len .Alerts.Resolved) 1)) }}
+{{ range .Alerts.Firing }}{{ .Annotations.summary }}{{ end }}{{ range .Alerts.Resolved }}{{ .Annotations.summary }}{{ end }}
+{{ else }}
+{{ if gt (len .Alerts.Firing) 0 }}
+*Alerts Firing:*
+{{ range .Alerts.Firing }}- {{ .Annotations.summary }}
+{{ end }}{{ end }}
+{{ if gt (len .Alerts.Resolved) 0 }}
+*Alerts Resolved:*
+{{ range .Alerts.Resolved }}- {{ .Annotations.summary }}
+{{ end }}{{ end }}
+{{ end }}
+{{ end }}
+
+{{ define "org_slack_title" -}}
+  [{{ .Status | toUpper }}{{ if eq .Status "firing" }}:{{ .Alerts.Firing | len }}{{- end -}}] {{ .CommonLabels.alertname }}
+{{- end }}
+
+{{ define "org_slack_color" -}}
+    {{ if eq .Status "firing" -}}
+        {{ if eq .CommonLabels.severity "warning" -}}
+            warning
+        {{- else if eq .CommonLabels.severity "critical" -}}
+            danger
+        {{- else -}}
+            #439FE0
+        {{- end -}}
+    {{ else -}}
+    good
+    {{- end }}
+{{- end }}
+
+{{ define "org_slack_text" -}}
+*Severity:* {{ .CommonLabels.severity }}
+{{ range .Alerts }}
+*Summary:*
+ {{ .Annotations.summary }}
+{{ if eq .Annotations.description "" }}
+{{ else }}
+*Description:*
+ {{ .Annotations.description }}
+{{ end }}
+{{ end }}
+{{- end }}
